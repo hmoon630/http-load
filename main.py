@@ -3,6 +3,7 @@ import re
 import argparse
 import threading
 import signal
+from sys import exit
 
 import progressbar
 import requests
