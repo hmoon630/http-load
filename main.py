@@ -2,6 +2,7 @@ import time
 import re
 import argparse
 import threading
+import signal
 
 import progressbar
 import requests
@@ -52,7 +53,6 @@ def print_statistic():
     p90_time = round(durations[int(len(durations) * 90 / 100) - 1], 3)
     p99_time = round(durations[int(len(durations) * 99 / 100) - 1], 3)
 
-    print(f"Finished all requests.")
     print(f"Duration: {DURATION}, Rate: {RATE}, URL: {URL}")
     print(f"Status codes: {status_result}")
     print(
@@ -98,7 +98,15 @@ def get_parsed_args(args):
     return url, duration, rate, timeout
 
 
+def signal_handler(signum, frame):
+    print("Stopped sending requests. Here's a stats for finished requests.")
+    print_statistic()
+    exit(1)
+
+
 if __name__ == "__main__":
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
     args = get_command_line_args()
     URL, DURATION, RATE, TIMEOUT = get_parsed_args(args)
 
@@ -119,6 +127,7 @@ if __name__ == "__main__":
         time.sleep(1)
     bar.finish()
     print("Waiting for all requests to end..")
-
     [job.join() for job in jobs]
+    print(f"Finished all requests.")
+
     print_statistic()
