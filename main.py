@@ -105,6 +105,13 @@ def signal_handler(signum, frame):
     exit(1)
 
 
+def spawn():
+    global jobs
+    new_jobs = [threading.Thread(target=load) for _ in range(RATE)]
+    [job.start() for job in new_jobs]
+    jobs += new_jobs
+
+
 if __name__ == "__main__":
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
@@ -120,9 +127,9 @@ if __name__ == "__main__":
 
     jobs = []
     for i in range(DURATION):
-        new_jobs = [threading.Thread(target=load) for _ in range(RATE)]
-        [job.start() for job in new_jobs]
-        jobs += new_jobs
+        spawner = threading.Thread(target=spawn)
+        spawner.start()
+        jobs.append(spawner)
 
         bar.update(i + 1)
         time.sleep(1)
