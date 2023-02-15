@@ -100,7 +100,17 @@ def get_parsed_args(args):
 
 
 def signal_handler(signum, frame):
-    print("Stopped sending requests. Here's a stats for finished requests.")
+    global jobs
+    print("Stopped sending requests. Waiting for in-flight requests.")
+    signal.signal(signal.SIGINT, signal_handler2)
+    [job.join() for job in jobs]
+    print("Finished all requests.")
+    print_statistic()
+    exit(1)
+
+
+def signal_handler2(signum, frame):
+    print("Here's a stat for finished requests.")
     print_statistic()
     exit(1)
 
@@ -114,7 +124,7 @@ def spawn():
 
 if __name__ == "__main__":
     signal.signal(signal.SIGINT, signal_handler)
-    signal.signal(signal.SIGTERM, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler2)
     args = get_command_line_args()
     URL, DURATION, RATE, TIMEOUT = get_parsed_args(args)
 
@@ -136,6 +146,6 @@ if __name__ == "__main__":
     bar.finish()
     print("Waiting for all requests to end..")
     [job.join() for job in jobs]
-    print(f"Finished all requests.")
+    print("Finished all requests.")
 
     print_statistic()
